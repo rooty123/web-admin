@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-admin
+  template:
+    metadata:
+      labels:
+        app: web-admin
+    spec:
+      containers:
+        - name: web-admin
+          image: microsm/micro-web-admin:latest
+          imagePullPolicy: Always
+          env:
+            - name: REDIS_ADDR
+              value: "redis-master:6379"
+            - name: SESSION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: web-admin-secrets
+                  key: session_key
+            - name: BASE_URL
+              value: "http://localhost:8080"
+            - name: USERS_URL
+              value: "http://user-service/users"
+            - name: ANALYTICS_URL
+              value: "http://analytics/aggregates"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: SERVICE_NAME
+              value: "web-admin"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-admin
+spec:
+  selector:
+    app: web-admin
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
