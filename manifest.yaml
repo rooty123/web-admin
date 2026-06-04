@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: web-admin
-          image: microsm/micro-web-admin:latest
+          image: microsm/micro-web-admin:__IMAGE_TAG__
           imagePullPolicy: Always
           env:
             - name: REDIS_ADDR
